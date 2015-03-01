@@ -25,3 +25,6 @@ _testmain.go
 
 # Sqlite
 *.db
+
+# Application
+reqmail
