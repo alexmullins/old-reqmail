@@ -40,12 +40,12 @@ var (
 // of A and B tables, email distribution list,
 // and settings (current table). Also can get a collection of
 // new requisitions.
-type AppDB struct {
+type ReqRepo struct {
 	*sqlx.DB
 }
 
 // Create the apps db with the correct structure.
-func NewAppDB(name string) (*AppDB, error) {
+func NewReqRepo(name string) (*ReqRepo, error) {
 	db, err := sqlx.Open("sqlite3", "app.db")
 	if err != nil {
 		return nil, err
@@ -61,39 +61,47 @@ func NewAppDB(name string) (*AppDB, error) {
 	//	2. emails
 	//	3. a
 	//	4. b
-	_, err = db.Exec(createSettingsTableSchema)
-	if err != nil {
+	if err = createDBStructure(db); err != nil {
 		return nil, err
+	}
+
+	return &ReqRepo{db}, nil
+}
+
+func createDBStructure(db *sqlx.DB) error {
+	_, err := db.Exec(createSettingsTableSchema)
+	if err != nil {
+		return err
 	}
 	_, err = db.Exec(createEmailsTableSchema)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(fmt.Sprintf(createReqTableSchema, "a"))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(fmt.Sprintf(createReqTableSchema, "b"))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &AppDB{db}, nil
+	return nil
 }
 
 // Subscribe a buyer to receive updates
-func (a *AppDB) SubscribeBuyer(b Buyer) (sql.Result, error) {
+func (a *ReqRepo) SubscribeBuyer(b Buyer) (sql.Result, error) {
 	r, err := a.Exec(subscribeBuyerStatement, b.Name, b.Email, true)
 	return r, err
 }
 
 // Unsubscribe buyer from receiving updates
-func (a *AppDB) UnsubscribeBuyer(b Buyer) (sql.Result, error) {
+func (a *ReqRepo) UnsubscribeBuyer(b Buyer) (sql.Result, error) {
 	r, err := a.Exec(unsubscribeBuyerStatement, b.Name)
 	return r, err
 }
 
 // Get a list of Buyers from database
-func (a *AppDB) GetBuyers() ([]Buyer, error) {
+func (a *ReqRepo) GetBuyers() ([]Buyer, error) {
 	buyers := make([]Buyer, 0)
 
 	rows, err := a.Query(getAllBuyersStatement)
@@ -115,15 +123,15 @@ func (a *AppDB) GetBuyers() ([]Buyer, error) {
 	return buyers, nil
 }
 
-// Update the "new" requisition table
-func (a *AppDB) UpdateReqTable(reqs []ReqLine) error {
+// // Update the "new" requisition table
+// func (a *ReqRepo) UpdateReqTable(reqs []ReqLine) error {
 
-}
+// }
 
-// Get a list of updates (name -> [#1 req, #2 req, #3 req])
-func (a *AppDB) GetUpdates() ([]ReqLine, error) {
+// // Get a list of updates (name -> [#1 req, #2 req, #3 req])
+// func (a *ReqRepo) GetUpdates() ([]ReqLine, error) {
 
-}
+// }
 
 // Simple Buyer
 type Buyer struct {
