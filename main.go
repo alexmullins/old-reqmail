@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	// Create local sqlite database
-	_, err := NewReqRepo("app.db")
+	_, err := NewSqliteRepo("app.db")
 	if err != nil {
 		log.Fatalln("couldn't create app db: %v", err)
 	}

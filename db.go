@@ -36,23 +36,24 @@ var (
 	getAllBuyersStatement = `SELECT * FROM emails;`
 )
 
-type Repository interface {
+// Interface to define storage for requisitions
+type ReqRepository interface {
 	SubscribeBuyer(*Buyer) error
 	UnsubscribeBuyer(*Buyer) error
 	UpdateReport(*ReqReport) error
-	GetNewReqs() ([]Buyers, error)
+	GetNewReqs() (*NewReqReport, error)
 }
 
 // DB in charge of keeping track
 // of A and B tables, email distribution list,
 // and settings (current table). Also can get a collection of
-// new requisitions.
-type ReqRepo struct {
+// new requisitions. Concrete implementation of ReqRepository interface
+type SqliteRepo struct {
 	*sqlx.DB
 }
 
 // Create the apps db with the correct structure.
-func NewReqRepo(name string) (*ReqRepo, error) {
+func NewSqliteRepo(name string) (*SqliteRepo, error) {
 	db, err := sqlx.Open("sqlite3", "app.db")
 	if err != nil {
 		return nil, err
@@ -72,7 +73,7 @@ func NewReqRepo(name string) (*ReqRepo, error) {
 		return nil, err
 	}
 
-	return &ReqRepo{db}, nil
+	return &SqliteRepo{db}, nil
 }
 
 func createDBStructure(db *sqlx.DB) error {
@@ -96,49 +97,37 @@ func createDBStructure(db *sqlx.DB) error {
 }
 
 // Subscribe a buyer to receive updates
-func (a *ReqRepo) SubscribeBuyer(b Buyer) (sql.Result, error) {
+func (a *SqliteRepo) SubscribeBuyer(b *Buyer) (sql.Result, error) {
 	r, err := a.Exec(subscribeBuyerStatement, b.Name, b.Email, true)
 	return r, err
 }
 
 // Unsubscribe buyer from receiving updates
-func (a *ReqRepo) UnsubscribeBuyer(b Buyer) (sql.Result, error) {
+func (a *SqliteRepo) UnsubscribeBuyer(b *Buyer) (sql.Result, error) {
 	r, err := a.Exec(unsubscribeBuyerStatement, b.Name)
 	return r, err
 }
 
-// Get a list of Buyers from database
-func (a *ReqRepo) GetBuyers() ([]Buyer, error) {
-	buyers := make([]Buyer, 0)
-
-	rows, err := a.Query(getAllBuyersStatement)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
-		var name string
-		var email string
-		var active bool
-
-		rows.Scan(&name, &email, &active)
-		b := Buyer{Name: name, Email: email, Active: active}
-		buyers = append(buyers, b)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	return buyers, nil
+func (s *SqliteRepo) UpdateReport(r *ReqReport) error {
+	// TODO
+	return nil
 }
 
-// // Update the "new" requisition table
-// func (a *ReqRepo) UpdateReqTable(reqs []ReqLine) error {
+func (s *SqliteRepo) GetNewReqs() *NewReqReport {
+	// TODO
+	return nil
+}
 
-// }
+// Struct to hold the data of "New Reqs"
+type NewReq struct {
+	ReqNo     string
+	LineNo    string
+	ReleaseNo string
+	BuyerName string
+	Email     string
+}
 
-// // Get a list of updates (name -> [#1 req, #2 req, #3 req])
-// func (a *ReqRepo) GetUpdates() ([]ReqLine, error) {
-
-// }
+type NewReqReport []NewReq
 
 // Simple Buyer
 type Buyer struct {
