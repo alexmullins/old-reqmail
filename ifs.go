@@ -9,7 +9,7 @@ type ReqSource interface {
 type IFS struct {
 }
 
-func (i *IFSSource) GetReqReport() (*ReqReport, error) {
+func (i *IFS) GetReqReport() (*ReqReport, error) {
 	return nil, nil
 }
 

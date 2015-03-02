@@ -16,7 +16,7 @@ type EmailUpdater struct {
 }
 
 //Intended to run in goroutine
-func (e *EmailUpdate) Run() {
+func (e *EmailUpdater) Run() {
 	//TODO
 	return
 }
