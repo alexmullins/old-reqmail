@@ -36,6 +36,13 @@ var (
 	getAllBuyersStatement = `SELECT * FROM emails;`
 )
 
+type Repository interface {
+	SubscribeBuyer(*Buyer) error
+	UnsubscribeBuyer(*Buyer) error
+	UpdateReport(*ReqReport) error
+	GetNewReqs() ([]Buyers, error)
+}
+
 // DB in charge of keeping track
 // of A and B tables, email distribution list,
 // and settings (current table). Also can get a collection of
