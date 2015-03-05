@@ -15,8 +15,7 @@ type EmailUpdater struct {
 	SMTPAddr  string
 }
 
-//Intended to run in goroutine
 func (e *EmailUpdater) Run() {
-	//TODO
+	// TODO
 	return
 }
