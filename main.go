@@ -17,12 +17,12 @@ var (
 func main() {
 	flag.Parse()
 
-	// Create local sqlite database
-	_, err := NewSqliteRepo("app.db")
-	if err != nil {
-		log.Fatalln("couldn't create app db: %v", err)
-	}
-	log.Println("Connected to database.")
+	// // Create local sqlite database
+	// _, err := NewSqliteRepo("app.db")
+	// if err != nil {
+	// 	log.Fatalln("couldn't create app db: %v", err)
+	// }
+	// log.Println("Connected to database.")
 
 	// // Connect to IFS via ODBC
 	// ifs := NewIFSConn("connection string")
@@ -31,14 +31,28 @@ func main() {
 	// Create a timer that signals a
 	// goroutine to start and pull an open req report
 	// every x minutues from IFS.
+	// countdown := time.NewTicker(*pollInterval)
+	// log.Println("Created timer: ", *pollInterval)
+	// for {
+	// 	select {
+	// 	case <-countdown.C:
+	// 		log.Println("Got signal to poll IFS.")
+	// 		// go ifs.poll()
+	// 		return
+	// 	}
+	// }
+	csv := &CSVSoure{}
+	go csv.Watch("./source/")
 	countdown := time.NewTicker(*pollInterval)
 	log.Println("Created timer: ", *pollInterval)
 	for {
 		select {
 		case <-countdown.C:
 			log.Println("Got signal to poll IFS.")
-			// go ifs.poll()
-			return
+			_, err := csv.GetReqReport()
+			if err != nil {
+				log.Printf("Got error: %s", err)
+			}
 		}
 	}
 }
