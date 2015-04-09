@@ -17,42 +17,67 @@ var (
 func main() {
 	flag.Parse()
 
-	// // Create local sqlite database
-	// _, err := NewSqliteRepo("app.db")
-	// if err != nil {
-	// 	log.Fatalln("couldn't create app db: %v", err)
-	// }
-	// log.Println("Connected to database.")
-
-	// // Connect to IFS via ODBC
-	// ifs := NewIFSConn("connection string")
-	// log.Println("Connected to IFS")
-
-	// Create a timer that signals a
-	// goroutine to start and pull an open req report
-	// every x minutues from IFS.
-	// countdown := time.NewTicker(*pollInterval)
-	// log.Println("Created timer: ", *pollInterval)
-	// for {
-	// 	select {
-	// 	case <-countdown.C:
-	// 		log.Println("Got signal to poll IFS.")
-	// 		// go ifs.poll()
-	// 		return
-	// 	}
-	// }
+	// Create datasource
 	csv := &CSVSoure{}
 	go csv.Watch("./source/")
-	countdown := time.NewTicker(*pollInterval)
+
+	// // Create datastore
+	// store := &MemoryStore{}
+
+	// // Create email updater
+	// // TODO: pass in username, password, and email server address
+	// emailer := &Emailer{}
+
 	log.Println("Created timer: ", *pollInterval)
+
+	app := &App{
+		Poll:   pollInterval,
+		Source: csv,
+		// Store:   store,
+		// Updater: emailer,
+	}
+
+	app.Run()
+
+}
+
+type App struct {
+	Poll   *time.Duration // poll period to data source
+	Source ReqSource      // source to pull ReqReport
+}
+
+func (a *App) Run() {
+	countdown := time.NewTicker(*a.Poll)
+
 	for {
 		select {
 		case <-countdown.C:
+			// Signaled to poll source for req data
 			log.Println("Got signal to poll IFS.")
-			_, err := csv.GetReqReport()
-			if err != nil {
-				log.Printf("Got error: %s", err)
-			}
+			report := a.pullReqReport()
+			log.Printf("report: %v", report)
+
+			// // Pass the new req report to datastore to find updates
+			// var store ReqRepository
+			// store.UpdateReport(report)
+
+			// // Get updates
+			// updates, err := store.GetNewReqs()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+
+			// // Pass updates to updater
+			// var updater Updater
+			// updater.SendUpdates(updates)
 		}
 	}
+}
+
+func (a *App) pullReqReport() *ReqReport {
+	report, err := a.Source.GetReqReport()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return report
 }
